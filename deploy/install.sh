@@ -8,8 +8,8 @@ OUT_BIN="${BUILD_DIR}/${BIN_NAME}"
 
 mkdir -p "${BUILD_DIR}"
 
-echo "[build] go build -o ${OUT_BIN} ./..."
-GO111MODULE=on go build -o "${OUT_BIN}" ./...
+echo "[build] go build -o ${OUT_BIN} ."
+GO111MODULE=on go build -o "${OUT_BIN}" .
 
 echo "[install] sudo install -m 0755 ${OUT_BIN} /usr/local/bin/${BIN_NAME}"
 sudo install -m 0755 "${OUT_BIN}" "/usr/local/bin/${BIN_NAME}"
