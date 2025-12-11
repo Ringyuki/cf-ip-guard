@@ -1,0 +1,26 @@
+[Unit]
+Description=cf-ip-guard - keep ipsets in sync with Cloudflare IP ranges
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cf-ip-guard daemon $CF_IP_GUARD_OPTS
+EnvironmentFile=-/etc/cf-ip-guard.env
+ExecStartPre=/usr/sbin/ipset list
+Restart=on-failure
+RestartSec=5s
+
+# Run as root because ipset requires CAP_NET_ADMIN.
+User=root
+Group=root
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
+NoNewPrivileges=true
+SystemCallFilter=@system-service
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+

@@ -1,0 +1,32 @@
+# Binaries and build artifacts
+bin/
+build/
+dist/
+out/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Go modules & dependencies
+vendor/
+
+# Coverage and test outputs
+*.out
+*.cov
+coverage/
+
+# Editor and OS junk
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Logs and runtime files
+*.log
+*.pid
+*.tmp
+
