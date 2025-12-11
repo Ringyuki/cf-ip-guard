@@ -30,16 +30,24 @@ sudo systemctl restart cf-ip-guard
 - Unit file: `deploy/cf-ip-guard.service` (installs to `/etc/systemd/system/cf-ip-guard.service`).
 - Extra CLI flags: set `CF_IP_GUARD_OPTS` in `/etc/cf-ip-guard.env` (e.g. `--interval 10m --log-level debug`).
 
-## Firewall rule examples (iptables)
-Make sure the ipsets exist (the daemon creates/syncs them). Add your own rules, for example:
+## Firewall rule examples (iptables, only 80/443)
+The design goal is to allow only Cloudflare IPs to reach HTTP/HTTPS. Ensure the ipsets exist (daemon creates/syncs them), then:
 ```bash
-# Allow inbound traffic only if source is in Cloudflare IPv4/IPv6 sets
-iptables -I INPUT -m set --match-set cloudflare4 src -j ACCEPT
-ip6tables -I INPUT -m set --match-set cloudflare6 src -j ACCEPT
+# Allow HTTP/HTTPS from Cloudflare IPv4
+sudo iptables -I INPUT -p tcp -m set --match-set cloudflare4 src --dport 80  -j ACCEPT
+sudo iptables -I INPUT -p tcp -m set --match-set cloudflare4 src --dport 443 -j ACCEPT
 
-# Optionally drop others for the same service/port in later rules (not shown)
+# Allow HTTP/HTTPS from Cloudflare IPv6
+sudo ip6tables -I INPUT -p tcp -m set --match-set cloudflare6 src --dport 80  -j ACCEPT
+sudo ip6tables -I INPUT -p tcp -m set --match-set cloudflare6 src --dport 443 -j ACCEPT
+
+# Drop all other HTTP/HTTPS traffic
+sudo iptables  -A INPUT -p tcp --dport 80  -j DROP
+sudo iptables  -A INPUT -p tcp --dport 443 -j DROP
+sudo ip6tables -A INPUT -p tcp --dport 80  -j DROP
+sudo ip6tables -A INPUT -p tcp --dport 443 -j DROP
 ```
-Adjust chains/ports to your policy. If you already use nftables, create equivalent rules referencing the ipsets.
+Adjust chains (e.g., use a dedicated service chain) and insertion order to fit your policy. For nftables, create equivalent rules referencing the same ipsets.
 
 ## Runtime notes
 - Defaults: interval 30m, ipset names `cloudflare4`/`cloudflare6`, API URL Cloudflare `/ips`.
