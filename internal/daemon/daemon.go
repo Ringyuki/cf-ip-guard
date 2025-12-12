@@ -2,7 +2,9 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"os/exec"
 	"time"
 
 	"github.com/Ringyuki/cf-ip-guard/internal/cloudflare"
@@ -13,12 +15,13 @@ import (
 var updateIPSetsFunc = firewall.UpdateIPSets
 
 type Config struct {
-	Interval      time.Duration
-	IPv4SetName   string
-	IPv6SetName   string
-	CloudflareAPI string
-	Once          bool
-	Logger        logging.Logger
+	Interval       time.Duration
+	IPv4SetName    string
+	IPv6SetName    string
+	CloudflareAPI  string
+	Once           bool
+	PersistentSave bool
+	Logger         logging.Logger
 }
 
 type updateStats struct {
@@ -78,6 +81,11 @@ func Run(ctx context.Context, cfg Config) error {
 		if !res.NotModified && res.ETag != "" {
 			lastETag = res.ETag
 		}
+		if cfg.PersistentSave && !res.NotModified {
+			if err := persistState(ctx, logger); err != nil {
+				logger.Warnw("persistent save failed", "err", err)
+			}
+		}
 	}
 
 	if cfg.Once {
@@ -105,6 +113,11 @@ func Run(ctx context.Context, cfg Config) error {
 				markSuccess(stats, logger, res)
 				if !res.NotModified && res.ETag != "" {
 					lastETag = res.ETag
+				}
+				if cfg.PersistentSave && !res.NotModified {
+					if err := persistState(ctx, logger); err != nil {
+						logger.Warnw("persistent save failed", "err", err)
+					}
 				}
 			}
 			logger.Infow("stats",
@@ -189,4 +202,24 @@ func markFailure(stats *updateStats, logger logging.Logger, err error) {
 	logger.Warnw("ipset update failed",
 		"consecutive_fail", stats.ConsecutiveFail,
 		"err", err)
+}
+
+func persistState(ctx context.Context, logger logging.Logger) error {
+	if err := runCmd(ctx, "iptables-persistent", "save"); err != nil {
+		logger.Warnw("iptables-persistent save failed", "err", err)
+	}
+	if err := runCmd(ctx, "ipset-persistent", "save"); err != nil {
+		logger.Warnw("ipset-persistent save failed", "err", err)
+	}
+
+	return nil
+}
+
+func runCmd(ctx context.Context, name string, args ...string) error {
+	cmd := exec.CommandContext(ctx, name, args...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s %v failed: %w (output: %s)", name, args, err, string(out))
+	}
+	return nil
 }

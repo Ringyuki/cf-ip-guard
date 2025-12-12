@@ -11,12 +11,13 @@ import (
 )
 
 var (
-	flagInterval   time.Duration
-	flagIPv4Set    string
-	flagIPv6Set    string
-	flagCloudflare string
-	flagOnce       bool
-	flagLogLevel   string
+	flagInterval       time.Duration
+	flagIPv4Set        string
+	flagIPv6Set        string
+	flagCloudflare     string
+	flagOnce           bool
+	flagLogLevel       string
+	flagPersistentSave bool
 )
 
 var daemonCmd = &cobra.Command{
@@ -32,12 +33,13 @@ var daemonCmd = &cobra.Command{
 		}
 
 		cfg := daemon.Config{
-			Interval:      flagInterval,
-			IPv4SetName:   flagIPv4Set,
-			IPv6SetName:   flagIPv6Set,
-			CloudflareAPI: flagCloudflare,
-			Once:          flagOnce,
-			Logger:        logger,
+			Interval:       flagInterval,
+			IPv4SetName:    flagIPv4Set,
+			IPv6SetName:    flagIPv6Set,
+			CloudflareAPI:  flagCloudflare,
+			Once:           flagOnce,
+			PersistentSave: flagPersistentSave,
+			Logger:         logger,
 		}
 
 		return daemon.Run(ctx, cfg)
@@ -60,4 +62,6 @@ func init() {
 		"run only one fetch-and-update cycle and exit")
 	daemonCmd.Flags().StringVar(&flagLogLevel, "log-level", "info",
 		"log level: debug, info, warn, error")
+	daemonCmd.Flags().BoolVar(&flagPersistentSave, "persistent-save", true,
+		"save iptables/ipset state after updates (iptables-persistent & ipset save)")
 }

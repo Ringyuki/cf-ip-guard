@@ -8,14 +8,14 @@ Keep local ipsets in sync with Cloudflare IP ranges and consume them in firewall
 - Does **not** create iptables/nftables rules; you must reference the ipsets yourself.
 
 ## Prerequisites
-- Linux with `ipset` and `iptables` installed.
+- Linux with `ipset` and `iptables` installed. For persistence, install `iptables-persistent` and `ipset-persistent` (or `netfilter-persistent`).
 - Root privileges (ipset operations need `CAP_NET_ADMIN`).
 - Go toolchain if building from source.
 - Create your own firewall rules that use the ipsets (examples below).
 
 ## Build & run (manual)
 ```bash
-go build -o cf-ip-guard ./...
+go build -o cf-ip-guard .
 sudo mv cf-ip-guard /usr/local/bin/
 sudo cf-ip-guard daemon --ipset4 cloudflare4 --ipset6 cloudflare6 --interval 30m --log-level info
 ```
@@ -29,6 +29,7 @@ sudo systemctl restart cf-ip-guard
 ```
 - Unit file: `deploy/cf-ip-guard.service` (installs to `/etc/systemd/system/cf-ip-guard.service`).
 - Extra CLI flags: set `CF_IP_GUARD_OPTS` in `/etc/cf-ip-guard.env` (e.g. `--interval 10m --log-level debug`).
+- Persistence: by default the daemon runs `iptables-persistent save` and `ipset save` (to `/etc/ipset.conf`) **only when ETag changes**. Disable via `--persistent-save=false` or in `CF_IP_GUARD_OPTS`.
 
 ## Firewall rule examples (iptables, only 80/443)
 The design goal is to allow only Cloudflare IPs to reach HTTP/HTTPS. Ensure the ipsets exist (daemon creates/syncs them), then:
@@ -53,4 +54,5 @@ Adjust chains (e.g., use a dedicated service chain) and insertion order to fit y
 - Defaults: interval 30m, ipset names `cloudflare4`/`cloudflare6`, API URL Cloudflare `/ips`.
 - On startup the daemon performs an immediate fetch/update, then loops on the interval.
 - Logs go to stderr; configure level via `--log-level` or `CF_IP_GUARD_OPTS`.
+- Persistence saves require root and the tools installed; failures are logged as warnings without stopping the loop.
 
