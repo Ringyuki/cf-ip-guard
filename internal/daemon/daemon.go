@@ -208,6 +208,7 @@ func persistState(ctx context.Context, logger logging.Logger) error {
 	if err := runCmd(ctx, "netfilter-persistent", "save"); err != nil {
 		logger.Warnw("iptables and ipset (netfilter-persistent) save failed", "err", err)
 	}
+	logger.Infow("iptables and ipset saved successfully")
 	return nil
 }
 
