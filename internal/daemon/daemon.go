@@ -205,13 +205,9 @@ func markFailure(stats *updateStats, logger logging.Logger, err error) {
 }
 
 func persistState(ctx context.Context, logger logging.Logger) error {
-	if err := runCmd(ctx, "iptables-persistent", "save"); err != nil {
-		logger.Warnw("iptables-persistent save failed", "err", err)
+	if err := runCmd(ctx, "netfilter-persistent", "save"); err != nil {
+		logger.Warnw("iptables and ipset (netfilter-persistent) save failed", "err", err)
 	}
-	if err := runCmd(ctx, "ipset-persistent", "save"); err != nil {
-		logger.Warnw("ipset-persistent save failed", "err", err)
-	}
-
 	return nil
 }
 

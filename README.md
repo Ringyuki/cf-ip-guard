@@ -29,7 +29,7 @@ sudo systemctl restart cf-ip-guard
 ```
 - Unit file: `deploy/cf-ip-guard.service` (installs to `/etc/systemd/system/cf-ip-guard.service`).
 - Extra CLI flags: set `CF_IP_GUARD_OPTS` in `/etc/cf-ip-guard.env` (e.g. `--interval 10m --log-level debug`).
-- Persistence: by default the daemon runs `iptables-persistent save` and `ipset-persistent save` **only when ETag changes**. Disable via `--persistent-save=false` or in `CF_IP_GUARD_OPTS`.
+- Persistence: by default the daemon runs `netfilter-persistent save` **only when ETag changes**. Disable via `--persistent-save=false` or in `CF_IP_GUARD_OPTS`.
 
 ## Firewall rule examples (iptables, only 80/443)
 The design goal is to allow only Cloudflare IPs to reach HTTP/HTTPS. Ensure the ipsets exist (daemon creates/syncs them), then:

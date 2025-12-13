@@ -63,5 +63,5 @@ func init() {
 	daemonCmd.Flags().StringVar(&flagLogLevel, "log-level", "info",
 		"log level: debug, info, warn, error")
 	daemonCmd.Flags().BoolVar(&flagPersistentSave, "persistent-save", true,
-		"save iptables/ipset state after updates (iptables-persistent & ipset save)")
+		"save iptables/ipset state after updates (netfilter-persistent save)")
 }
